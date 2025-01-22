@@ -1,7 +1,7 @@
-# SignalScout: An Autonomous Guided Vehicle
+# The Frequency Finders: An Autonomous Guided Vehicle
 
 ## **Project Overview**
-SignalScout is an autonomous guided vehicle (AGV) project developed for the SWE 6823 Embedded Systems class. The system uses a Raspberry Pi, motors, a camera, sensors, and RF modules to detect and navigate to a beacon emitting a specific radio frequency while avoiding obstacles. This repository contains the code, documentation, and resources for the project.
+The Frequency Finders is an autonomous guided vehicle (AGV) project developed for the SWE 6823 Embedded Systems class. The system uses a Raspberry Pi, motors, a camera, sensors, and RF modules to detect and navigate to a beacon emitting a specific radio frequency while avoiding obstacles. This repository contains the code, documentation, and resources for the project.
 
 ---
 
@@ -74,20 +74,20 @@ SignalScout/
 
 ## **Contributing**
 1. **Fork the Repository**:
-   - Go to the repository's GitHub page: [SignalScout Repo](https://github.com/yourusername/SignalScout).
+   - Go to the repository's GitHub page: [The Frequency Finders Repo](https://github.com/yourusername/TheFrequencyFinders).
    - Click on the "Fork" button in the top-right corner to create your copy of the repository.
 
 2. **Clone the Forked Repository**:
    - Open your terminal and run the following command:
      ```bash
-     git clone https://github.com/yourusername/SignalScout.git
+     git clone https://github.com/yourusername/TheFrequencyFinders.git
      ```
    - Replace `yourusername` with your GitHub username.
 
 3. **Create a New Branch**:
    - Navigate to the project directory:
      ```bash
-     cd SignalScout
+     cd TheFrequencyFinders
      ```
    - Create and switch to a new branch for your feature or bugfix:
      ```bash
@@ -126,7 +126,7 @@ SignalScout/
 - Use clear and concise commit messages to describe your work.
 
 ## **Contact**
-**Team Name**: SignalScout Team  
+**Team Name**: The Frequency Finders Team  
 **Team Lead**: Ryan Hanrahan  
 **Team Members**: Vladimir Maximov, Elliotte Wideman  
  
