@@ -111,20 +111,20 @@ SignalScout/                             # Root folder for the project
 ## **Contributing**
 
 1. **Fork the Repository**:
-   - Go to the repository’s GitHub page.
-   - Click the "Fork" button to create your own copy of the repository.
+   - Go to the repository’s GitHub page at [Embedded-systems-6823](https://github.com/EazyW96/Embedded-systems-6823).
+   - Click the "Fork" button in the top-right corner to create your own copy of the repository.
 
 2. **Clone the Forked Repository**:
    - Open your terminal and run:
      ```bash
-     git clone https://github.com/yourusername/TheFrequencyFinders.git
+     git clone https://github.com/<yourusername>/Embedded-systems-6823.git
      ```
-   - Replace `yourusername` with your GitHub username.
+   - Replace `<yourusername>` with your GitHub username.
 
 3. **Create a New Branch**:
    - Navigate to the project directory:
      ```bash
-     cd TheFrequencyFinders
+     cd Embedded-systems-6823
      ```
    - Create and switch to a new branch:
      ```bash
@@ -136,23 +136,24 @@ SignalScout/                             # Root folder for the project
      ```bash
      git add .
      ```
-   - Commit with a descriptive message:
+   - Commit your changes with a descriptive message:
      ```bash
      git commit -m "Describe your changes here"
      ```
 
 5. **Push Your Branch**:
-   - Push the changes:
+   - Push the changes to your fork:
      ```bash
      git push origin feature-or-bugfix-name
      ```
 
 6. **Submit a Pull Request**:
-   - On GitHub, navigate to "Pull Requests" and click "New Pull Request."
-   - Select your branch and submit the pull request with detailed comments.
+   - On GitHub, navigate to the "Pull Requests" tab of the original repository.
+   - Click "New Pull Request" and select your branch from your fork.
+   - Submit the pull request with detailed comments describing your changes.
 
 **Collaboration Tips**:
-- Make sure to pull the latest changes from the main repository regularly:
+- Regularly update your local repository with the latest changes from the main repository:
   ```bash
   git pull upstream main
   ```
