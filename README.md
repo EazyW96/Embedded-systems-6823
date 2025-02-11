@@ -111,7 +111,7 @@ SignalScout/                             # Root folder for the project
 ## **Contributing**
 
 1. **Fork the Repository**:
-   - Go to the repository’s GitHub page: [The Frequency Finders Repo](https://github.com/yourusername/TheFrequencyFinders).
+   - Go to the repository’s GitHub page.
    - Click the "Fork" button to create your own copy of the repository.
 
 2. **Clone the Forked Repository**:
