@@ -18,7 +18,7 @@ The project demonstrates key principles of sensor integration, data processing, 
 
 ## **Project Structure**
 ```
-SignalScout/                             # Root folder for the project
+FrequencyFinders/                        # Root folder for the project
 │
 ├── README.md                            # Project overview, goals, installation and running instructions
 ├── LICENSE                              # License file for the project (e.g., MIT, GPL, etc.)
