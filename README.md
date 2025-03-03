@@ -165,7 +165,7 @@ FrequencyFinders/                        # Root folder for the project
 ## **Contact**
 **Team Name**: The Frequency Finders Team  
 **Team Lead**: Ryan Hanrahan  
-**Team Members**: Vladimir Maximov, Elliotte Wideman  
+**Team Members**: Vladimir Maximov, Elliotte Wideman, Tyler Breedlove 
  
 For any queries, contact:  
 - Ryan Hanrahan: `rhanrah1@students.kennesaw.edu`  

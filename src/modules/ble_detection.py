@@ -68,3 +68,20 @@ class BLEBeaconDetector:
         else:
             return "Unknown Status"
         
+async def main():
+    target_uuid = "6A4E3E10-6678-11E3-949A-0800200C9A66"
+    detector = BLEBeaconDetector(target_uuid = target_uuid)
+
+    while True:
+        await detector.scan_beacons()
+
+        for address, data in detector.beacon_data.items():
+            print(f"Beacon Address: {address}")
+            print(f" RSSI: {data['rssi']}")
+            print(f" Estimated Proximity: {detector.estimate_proximity(address)}")
+            print(f" Estimated Direction: {detector.estimate_direction(address)}")
+        
+        await asyncio.sleep(2) #Scan for beacon every 2 seconds (will most likely need to be changed)
+
+if __name__ == "__main__":
+    asyncio.run(main())
