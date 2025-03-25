@@ -12,6 +12,7 @@ import cv2
 import asyncio
 import bleak
 from bleak import BleakScanner, BleakClient
+from ble_detection import BLEBeaconDetector
 
 class SensorManager:
     def __init__(self, trig_pin = 17, echo_pin = 18, camera_index = 0, target_uuid = None):
@@ -32,29 +33,32 @@ class SensorManager:
         self.beacon_data = {}
         self.rssi_history_length = 5
     
-    def get_ultrasonic_distance(self):
+    def get_ultrasonic_distance(self, num_readings = 5):
         # Return distance from the sensor
         try:
-            GPIO.output(self.trig_pin, True)
-            time.sleep(0.00001)
-            GPIO.output(self.trig_pin, False)
+            distances = []
+            for _ in range(num_readings):
+                GPIO.output(self.trig_pin, True)
+                time.sleep(0.00001)
+                GPIO.output(self.trig_pin, False)
             
-            pulse_start = time.time()
-            pulse_end = time.time()
-
-            while GPIO.input(self.echo_pin) == 0:
                 pulse_start = time.time()
-
-            while GPIO.input(self.echo_pin) == 1:
                 pulse_end = time.time()
 
-            pulse_duration = pulse_end - pulse_start
-            distance = pulse_duration * 17150
-            distance = round(distance, 2)
-            return distance
+                while GPIO.input(self.echo_pin) == 0:
+                    pulse_start = time.time()
+
+                while GPIO.input(self.echo_pin) == 1:
+                    pulse_end = time.time()
+
+                pulse_duration = pulse_end - pulse_start
+                distance = pulse_duration * 17150
+                distance = round(distance, 2)
+                distance.append(distance)
+                return sum(distances) / num_readings
         except Exception as e:
-            print(f"Ultrasonic Error: {e}")
-            return - 1 # Error Return Value
+                print(f"Ultrasonic Error: {e}")
+                return - 1 # Error Return Value
     
     def capture_camera_frame(self):
         ret, frame = self.capt.read()
