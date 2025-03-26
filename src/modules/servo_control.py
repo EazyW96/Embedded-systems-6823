@@ -1,4 +1,5 @@
-from pca9685 import PCA9685
+from modules.pca9685 import PCA9685
+
 
 class Servo:
     def __init__(self):

@@ -6,8 +6,8 @@ It includes functions for moving forward, backward, turning, and can incorporate
 """
 import RPi.GPIO as GPIO
 import time
-from servo_control import Servo
-from sensor_manager import SensorManager
+from modules.servo_control import Servo
+# from sensor_manager import SensorManager
 from typing import Dict, Optional
 
 class MotorControl:
