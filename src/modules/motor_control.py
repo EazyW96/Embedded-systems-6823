@@ -1,138 +1,108 @@
-"""
-Motor Control Module.
-
-This module converts movement commands into actions by controlling the DC motors and servo mechanisms.
-It includes functions for moving forward, backward, turning, and can incorporate PID control for smoother operations.
-"""
-import RPi.GPIO as GPIO
 import time
 from modules.servo_control import Servo
-# from sensor_manager import SensorManager
-from typing import Dict, Optional
+from modules.pca9685 import PCA9685
 
 class MotorControl:
-    def __init__(self, left_motor_pins = (17, 18, 27), right_motor_pins = (22, 23, 24), servo_pin = 25):
-        # Initializes the motor and servo with proper pin configurations
-        # (May have to alter as testing begins)
-        self.left_motor_pins = left_motor_pins
-        self.right_motor_pins = right_motor_pins
-        self.servo_pin = servo_pin
+    def __init__(self):
+        self.pwm = PCA9685(0x40, debug=True)
+        self.pwm.set_pwm_freq(50)
+        
+    def duty_range(self,duty1,duty2,duty3,duty4):
+        if duty1>4095:
+            duty1=4095
+        elif duty1<-4095:
+            duty1=-4095        
+        
+        if duty2>4095:
+            duty2=4095
+        elif duty2<-4095:
+            duty2=-4095
+            
+        if duty3>4095:
+            duty3=4095
+        elif duty3<-4095:
+            duty3=-4095
+            
+        if duty4>4095:
+            duty4=4095
+        elif duty4<-4095:
+            duty4=-4095
+        return duty1,duty2,duty3,duty4
+        
+    def left_Upper_Wheel(self,duty):
+        if duty>0:
+            self.pwm.set_motor_pwm(0,0)
+            self.pwm.set_motor_pwm(1,duty)
+        elif duty<0:
+            self.pwm.set_motor_pwm(1,0)
+            self.pwm.set_motor_pwm(0,abs(duty))
+        else:
+            self.pwm.set_motor_pwm(0,4095)
+            self.pwm.set_motor_pwm(1,4095)
+            
+    def left_Lower_Wheel(self,duty):
+        if duty>0:
+            self.pwm.set_motor_pwm(3,0)
+            self.pwm.set_motor_pwm(2,duty)
+        elif duty<0:
+            self.pwm.set_motor_pwm(2,0)
+            self.pwm.set_motor_pwm(3,abs(duty))
+        else:
+            self.pwm.set_motor_pwm(2,4095)
+            self.pwm.set_motor_pwm(3,4095)
+            
+    def right_Upper_Wheel(self,duty):
+        if duty>0:
+            self.pwm.set_motor_pwm(6,0)
+            self.pwm.set_motor_pwm(7,duty)
+        elif duty<0:
+            self.pwm.set_motor_pwm(7,0)
+            self.pwm.set_motor_pwm(6,abs(duty))
+        else:
+            self.pwm.set_motor_pwm(6,4095)
+            self.pwm.set_motor_pwm(7,4095)
+            
+    def right_Lower_Wheel(self,duty):
+        if duty>0:
+            self.pwm.set_motor_pwm(4,0)
+            self.pwm.set_motor_pwm(5,duty)
+        elif duty<0:
+            self.pwm.set_motor_pwm(5,0)
+            self.pwm.set_motor_pwm(4,abs(duty))
+        else:
+            self.pwm.set_motor_pwm(4,4095)
+            self.pwm.set_motor_pwm(5,4095)
+ 
+    def setMotorModel(self,duty1,duty2,duty3,duty4):
+        duty1,duty2,duty3,duty4=self.duty_range(duty1,duty2,duty3,duty4)
+        self.left_Upper_Wheel(duty1)
+        self.left_Lower_Wheel(duty2)
+        self.right_Upper_Wheel(duty3)
+        self.right_Lower_Wheel(duty4)
 
-        GPIO.setmode(GPIO.BCM)
+    def move_forward(self, speed=50):
+        print("Moving forward...")
+        self.setMotorModel(2000, 2000, 2000, 2000)
 
-        # Motor 
-        GPIO.setup(left_motor_pins[0], GPIO.OUT)
-        GPIO.setup(left_motor_pins[1], GPIO.OUT)
-        GPIO.setup(left_motor_pins[2], GPIO.OUT)
-        GPIO.setup(right_motor_pins[0], GPIO.OUT)
-        GPIO.setup(right_motor_pins[1], GPIO.OUT)
-        GPIO.setup(right_motor_pins[2], GPIO.OUT)
+    def move_backwards(self, speed=50):
+        print("Moving backward...")
+        self.setMotorModel(-2000,-2000,-2000,-2000)
 
-        self.left_pwm =  GPIO.PWM(left_motor_pins[2], 100)
-        # PWM frequency set to 100 Hz (Alter as needed)
-        self.right_pwm = GPIO.PWM(right_motor_pins[2], 100)
-        self.left_pwm.start(0)
-        self.right_pwm.start(0)
+    def turn_left(self, speed=25):
+        print("Turning left...")
+        self.setMotorModel(-500,-500,2000,2000) 
 
-        # Instantiate Servo
-        self.servo = Servo()
-
-    def move_motor(self, left_direction, right_direction, speed = 50):
-        GPIO.output(self.left_motor_pins[0], left_direction[0])
-        GPIO.output(self.left_motor_pins[1], left_direction[1])
-        GPIO.output(self.right_motor_pins[0], right_direction[0])
-        GPIO.output(self.right_motor_pins[1], right_direction[1])
-        self.left_pwm.ChangeDutyCycle(speed)
-        self.right_pwm.ChangeDutyCycle(speed)
-
-
-    # Establish movement parameters(speed and pin settins may require alteration)
-    def move_forward(self, speed = 50):
-       self.move_motor((GPIO.HIGH, GPIO.LOW), (GPIO.HIGH, GPIO.LOW), speed) 
-
-    def move_backwards(self, speed = 50):
-        self.move_motor((GPIO.LOW, GPIO.HIGH), (GPIO.LOW, GPIO.HIGH), speed) 
-
-    def turn_left(self, speed = 25):
-        self.move_motor((GPIO.LOW, GPIO.HIGH), (GPIO.HIGH, GPIO.LOW), speed) 
-    
-    def turn_right(self, speed = 25):
-        self.move_motor((GPIO.HIGH, GPIO.LOW), (GPIO.LOW, GPIO.HIGH), speed)
+    def turn_right(self, speed=25):
+        print("Turning right...")
+        self.setMotorModel(1000,2000,-500,-500)
 
     def stop_car(self):
-        self.left_pwm.ChangeDutyCycle(0)
-        self.right_pwm.ChangeDutyCycle(0)
+        print("Stopping car.")
+        self.setMotorModel(0,0,0,0)
 
     def set_servo_angle(self, channel: str, angle: int, error: int = 10):
-        # Set the servo to the correct angle  
         self.servo.set_servo_angle(channel, angle, error)
-    
-    async def react_to_beacons(self, beacon_data: Dict[str, dict[str, Optional[str | int | float]]]):
-        # Beacon addresses are added to a string for easier reading
-        # Also, react to beacons and controls car direction
-        await self.sensor_manager.scan_ble_beacons()
-        beacon_data = self.sensor_manager.ble_detector.beacon_data
-        if not beacon_data:
-            print ("No beacons detected")
-            self.stop_car()
-            return
 
-        # Logic to have the car approach the strongest beacon signal
-        # (Values may require adjustment)
-        strongest_beacon_address = max(beacon_data, key = lambda address: sum(beacon_data[address]["rssi"]) / len(beacon_data[address]["rssi"]))
-        strongest_beacon = beacon_data[strongest_beacon_address]
-        avg_rssi = sum(strongest_beacon["rssi"]) / len(strongest_beacon["rssi"])
-        proximity = self.sensor_manager.estimate_ble_proximity(strongest_beacon_address)
-        direction = self.sensor_manager.estimate_ble_direction(strongest_beacon_address)
-
-        if avg_rssi > -60:
-            print(f"Strong Signal, Move Forward. Proximity to Beacon: {proximity}, Direction: {direction}")
-            self.move_forward(speed = 70)
-        elif direction == "Approaching Beacon Location":
-            print(f"Approaching Beacon. Proximity: {proximity}, Direction: {direction}")
-            self.move_forward(speed = 50)
-        elif direction == "Moving away from Beacon":
-            print(f"Moving away from Beacon Location. Proximity: {proximity}, Direction: {direction}")
-            self.move_backwards(speed = 50)
-        elif direction == "Left":
-            print(f"Beacon is to the left. Proximity: {proximity}, Direction: {direction}")
-            self.turn_left(speed = 40)
-        elif direction == "Right":
-            print(f"Beacon is to the right. Proximity: {proximity}, Direction: {direction}")
-            self.turn_right(speed = 40)
-        elif proximity == "Close":
-            print(f"Beacon is Close. Proximity: {proximity}, Direction: {direction}")
-            self.stop_car()
-        elif proximity == "Beacon is further away":
-            print(f"Beacon is Further away. Proximity: {proximity}, Direction: {direction}")
-            self.move_forward(speed = 30)
-        elif proximity == "Beacon is Far":
-            print(f"Beacon is Far. Proximity: {proximity}, Direction: {direction}")
-            self.move_forward(speed = 70)
-        else: 
-            print(f"Beacon not Found")
-            self.stop_car()
-    
     def cleanup(self):
-        # Clean pins for effective resource management
-        self.left_pwm.stop()
-        self.right_pwm.stop()
-        GPIO.cleanup()
-
-if __name__ == "__main__":
-    import asyncio
-    controller = MotorControl(target_uuid = "6A4E3E10-6678-11E3-949A-0800200C9A66")
-
-    async def main():
-        try:
-            while True:
-                await controller.react_to_beacons()
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("Program Terminated")
-        finally:
-            controller.cleanup()
-            controller.sensor_manager.cleanup_ultrasonic()
-            controller.sensor_manager.cleanup_camera()
-
-    asyncio.run(main)
+        print("Motor cleanup ...")
+        self.stop_car()

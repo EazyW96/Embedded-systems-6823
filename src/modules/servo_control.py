@@ -1,6 +1,5 @@
 from modules.pca9685 import PCA9685
 
-
 class Servo:
     def __init__(self):
         self.pwm_frequency = 50
@@ -29,7 +28,7 @@ class Servo:
 
 # Main program logic follows:
 if __name__ == '__main__':
-    print("Now servos will rotate to 90 degree.") 
+    print("Now servos will rotate to 90 degree.")
     print("If they have already been at 90 degree, nothing will be observed.")
     print("Please keep the program running when installing the servos.")
     print("After that, you can press ctrl-C to end the program.")

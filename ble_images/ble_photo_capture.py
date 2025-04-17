@@ -1,6 +1,7 @@
 from picamera2 import Picamera2
 import time
 import os
+from datetime import datetime
 
 # === Config ===
 PHOTO_COUNT = 10
@@ -17,11 +18,12 @@ camera.start_preview()
 camera.start()
 time.sleep(2)  # Camera warm-up
 
-# Photo capture loop
 print("?? Starting photo capture. Taking 10 pictures every 5 seconds...")
 
+# Photo capture loop
 for i in range(1, PHOTO_COUNT + 1):
-    filename = os.path.join(SAVE_PATH, f"simple_photo_{i}.jpg")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = os.path.join(SAVE_PATH, f"ble_photo_{timestamp}.jpg")
     camera.capture_file(filename)
     print(f"? Saved photo {i}: {filename}")
     time.sleep(INTERVAL)
