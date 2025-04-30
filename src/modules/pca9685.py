@@ -3,9 +3,9 @@ import time
 import math
 import smbus
 
-# ============================================================================
+# ========================================================================
 # Raspi PCA9685 16-Channel PWM Servo Driver
-# ============================================================================
+# ========================================================================
 class PCA9685:
     # Registers/etc.
     __SUBADR1 = 0x02
@@ -34,8 +34,7 @@ class PCA9685:
 
     def read(self, reg: int) -> int:
         """Read an unsigned byte from the I2C device."""
-        result = self.bus.read_byte_data(self.address, reg)
-        return result
+        return self.bus.read_byte_data(self.address, reg)
 
     def set_pwm_freq(self, freq: float) -> None:
         """Sets the PWM frequency."""
@@ -47,7 +46,7 @@ class PCA9685:
         oldmode = self.read(self.__MODE1)
         newmode = (oldmode & 0x7F) | 0x10  # sleep
         self.write(self.__MODE1, newmode)  # go to sleep
-        self.write(self.__PRESCALE, int(math.floor(prescale)))
+        self.write(self.__PRESCALE, int(prescale))
         self.write(self.__MODE1, oldmode)
         time.sleep(0.005)
         self.write(self.__MODE1, oldmode | 0x80)

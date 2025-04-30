@@ -1,53 +1,71 @@
 import time
-from modules.servo_control import Servo
-from modules.sensor_manager import SensorManager
+import threading
+import RPi.GPIO as GPIO
+import asyncio
 
 class ObstacleAvoidance:
-    def __init__(self, sensor_manager: SensorManager):
-        self.sensor = sensor_manager
-        self.servo = Servo()
-        self.safe_distance = 20  # Safe distance in centimeters
+    def __init__(self, trig_pin=27, echo_pin=22, loop=None):
+        self.trig_pin = trig_pin
+        self.echo_pin = echo_pin
+        self.loop = loop
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.setup(self.trig_pin, GPIO.OUT)
+        GPIO.setup(self.echo_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-    def scan_environment(self):
-        """Scan left, center, and right; return distances."""
-        distances = {}
+    def init_obstacle_thread(self, queue, motor):
+        thread = threading.Thread(target=self.avoidance_thread, args=(queue, motor), daemon=True)
+        thread.start()
 
-        # Look Left (30 degrees)
-        self.servo.set_servo_pwm('0', 30)
-        time.sleep(0.2)
-        distances['left'] = self.sensor.get_ultrasonic_distance()
+    def get_ultrasonic_distance(self, num_readings=3):
+        distances = []
+        try:
+            for _ in range(num_readings):
+                GPIO.output(self.trig_pin, True)
+                time.sleep(0.00001)
+                GPIO.output(self.trig_pin, False)
 
-        # Look Center (90 degrees)
-        self.servo.set_servo_pwm('0', 90)
-        time.sleep(0.2)
-        distances['center'] = self.sensor.get_ultrasonic_distance()
+                timeout = time.time() + 0.1
+                while GPIO.input(self.echo_pin) == 0:
+                    if time.time() > timeout:
+                        return -1
+                pulse_start = time.time()
 
-        # Look Right (150 degrees)
-        self.servo.set_servo_pwm('0', 150)
-        time.sleep(0.2)
-        distances['right'] = self.sensor.get_ultrasonic_distance()
+                timeout = time.time() + 0.1
+                while GPIO.input(self.echo_pin) == 1:
+                    if time.time() > timeout:
+                        return -1
+                pulse_end = time.time()
 
-        # Reset to center
-        self.servo.set_servo_pwm('0', 90)
+                duration = pulse_end - pulse_start
+                distances.append(round(duration * 17150, 2))
 
-        return distances
+            return sum(distances) / len(distances)
+        except Exception as e:
+            print(f"[Ultrasonic Error] {e}")
+            return -1
 
-    def decide_movement(self):
-        """Decide movement based on scanned distances."""
-        distances = self.scan_environment()
-        print(f"[Obstacle Scan] Left: {distances['left']} cm | Center: {distances['center']} cm | Right: {distances['right']} cm")
+    def avoidance_thread(self, queue, motor):
+        while True:
+            distance = self.get_ultrasonic_distance()
+            if 0 < distance < 15:
+                print("[AVOIDANCE] Obstacle detected!")
+                task = lambda: self.avoid_obstacle(motor)
+                asyncio.run_coroutine_threadsafe(queue.put((0, task)), self.loop)
+            time.sleep(0.2)
 
-        # Treat -1 readings as blocked
-        if distances['center'] == -1 or distances['left'] == -1 or distances['right'] == -1:
-            print("[Warning] Sensor error detected. Treating as obstacle.")
-            return "move_backwards"
+    def avoid_obstacle(self, motor):
+        print("[AVOIDANCE] Avoiding...")
+        motor.stop_car()
+        time.sleep(0.1)
+        motor.turn_right(speed=800)
+        time.sleep(2)
+        motor.stop_car()
 
-        if distances['center'] < self.safe_distance:
-            if distances['left'] > self.safe_distance:
-                return "turn_left"
-            elif distances['right'] > self.safe_distance:
-                return "turn_right"
-            else:
-                return "move_backwards"
-        else:
-            return "move_forward"
+    def check_and_avoid(self, motor):
+        """Optional: Called from BLE to check and react instantly."""
+        distance = self.get_ultrasonic_distance()
+        if 0 < distance < 15:
+            self.avoid_obstacle(motor)
+            return True
+        return False

@@ -1,71 +1,31 @@
 import time
-import RPi.GPIO as GPIO
-from bleak import BleakScanner
+import asyncio
 from modules.ble_detection import BLEBeaconDetector
+from modules.obstacle_avoidance import ObstacleAvoidance
+from modules.motor_control import MotorControl
+from modules.head_movement import HeadMovement
+from picamera2 import Picamera2
 
 class SensorManager:
-    def __init__(self, trig_pin=27, echo_pin=22, target_uuid=None, target_mac=None):
-        self.trig_pin = trig_pin
-        self.echo_pin = echo_pin
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.trig_pin, GPIO.OUT)
-        GPIO.setup(self.echo_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        self.ble_detector = BLEBeaconDetector(target_uuid=target_uuid, target_mac=target_mac)
+    def __init__(self, target_mac, photo_dir, loop):
+        self.motors = MotorControl()
+        self.head = HeadMovement()
+        self.camera = Picamera2()
+        self.photo_dir = photo_dir
 
-    def get_ultrasonic_distance(self, num_readings=3):
-        distances = []
-        try:
-            for _ in range(num_readings):
-                GPIO.output(self.trig_pin, True)
-                time.sleep(0.00001)
-                GPIO.output(self.trig_pin, False)
+        self.camera.configure(self.camera.create_still_configuration())
+        self.camera.start()
+        time.sleep(2)
 
-                timeout = time.time() + 0.05
+        self.ble_detector = BLEBeaconDetector(target_mac, photo_dir, loop)
+        self.ble_detector.motors = self.motors
+        self.ble_detector.camera = self.camera
 
-                while True:
-                    if GPIO.input(self.echo_pin):
-                        pulse_start = time.time()
-                        break
-                    if time.time() > timeout:
-                        return -1
+        self.task_queue = self.ble_detector.task_queue
 
-                while True:
-                    if not GPIO.input(self.echo_pin):
-                        pulse_end = time.time()
-                        break
-                    if time.time() > timeout:
-                        return -1
+        self.ble_detector.avoidance = ObstacleAvoidance(loop=loop)
+        self.ble_detector.avoidance.init_obstacle_thread(self.task_queue, self.motors)
 
-                duration = pulse_end - pulse_start
-                distance = round(duration * 17150, 2)
-                distances.append(distance)
-
-            avg_distance = sum(distances) / len(distances) if distances else -1
-            return avg_distance
-
-        except Exception as e:
-            print(f"[ERROR] Ultrasonic read failed: {e}")
-            return -1
-
-    async def scan_for_beacon(self):
-        """Scan for BLE beacon."""
-        await self.ble_detector.scan_beacons()
-        beacons = self.ble_detector.beacon_data
-
-        if not beacons:
-            return False
-
-        strongest = max(beacons.items(), key=lambda b: sum(b[1]["rssi"]) / len(b[1]["rssi"]))
-        addr, data = strongest
-        rssi = sum(data["rssi"]) / len(data["rssi"])
-
-        print(f"[BLE Detection] Address: {addr} | RSSI: {rssi:.2f}")
-
-        if rssi > -65:
-            return True
-        else:
-            return False
-
-    def cleanup_ultrasonic(self):
-        print("Ultrasonic Cleanup")
-        # GPIO.cleanup()
+    def start_all_threads(self):
+        print("[SENSOR MANAGER] Starting BLE detection thread")
+        self.ble_detector.start_all_threads()

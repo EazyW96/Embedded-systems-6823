@@ -1,108 +1,57 @@
 import time
-from modules.servo_control import Servo
 from modules.pca9685 import PCA9685
 
 class MotorControl:
     def __init__(self):
         self.pwm = PCA9685(0x40, debug=True)
         self.pwm.set_pwm_freq(50)
-        
-    def duty_range(self,duty1,duty2,duty3,duty4):
-        if duty1>4095:
-            duty1=4095
-        elif duty1<-4095:
-            duty1=-4095        
-        
-        if duty2>4095:
-            duty2=4095
-        elif duty2<-4095:
-            duty2=-4095
-            
-        if duty3>4095:
-            duty3=4095
-        elif duty3<-4095:
-            duty3=-4095
-            
-        if duty4>4095:
-            duty4=4095
-        elif duty4<-4095:
-            duty4=-4095
-        return duty1,duty2,duty3,duty4
-        
-    def left_Upper_Wheel(self,duty):
-        if duty>0:
-            self.pwm.set_motor_pwm(0,0)
-            self.pwm.set_motor_pwm(1,duty)
-        elif duty<0:
-            self.pwm.set_motor_pwm(1,0)
-            self.pwm.set_motor_pwm(0,abs(duty))
-        else:
-            self.pwm.set_motor_pwm(0,4095)
-            self.pwm.set_motor_pwm(1,4095)
-            
-    def left_Lower_Wheel(self,duty):
-        if duty>0:
-            self.pwm.set_motor_pwm(3,0)
-            self.pwm.set_motor_pwm(2,duty)
-        elif duty<0:
-            self.pwm.set_motor_pwm(2,0)
-            self.pwm.set_motor_pwm(3,abs(duty))
-        else:
-            self.pwm.set_motor_pwm(2,4095)
-            self.pwm.set_motor_pwm(3,4095)
-            
-    def right_Upper_Wheel(self,duty):
-        if duty>0:
-            self.pwm.set_motor_pwm(6,0)
-            self.pwm.set_motor_pwm(7,duty)
-        elif duty<0:
-            self.pwm.set_motor_pwm(7,0)
-            self.pwm.set_motor_pwm(6,abs(duty))
-        else:
-            self.pwm.set_motor_pwm(6,4095)
-            self.pwm.set_motor_pwm(7,4095)
-            
-    def right_Lower_Wheel(self,duty):
-        if duty>0:
-            self.pwm.set_motor_pwm(4,0)
-            self.pwm.set_motor_pwm(5,duty)
-        elif duty<0:
-            self.pwm.set_motor_pwm(5,0)
-            self.pwm.set_motor_pwm(4,abs(duty))
-        else:
-            self.pwm.set_motor_pwm(4,4095)
-            self.pwm.set_motor_pwm(5,4095)
- 
-    def setMotorModel(self,duty1,duty2,duty3,duty4):
-        duty1,duty2,duty3,duty4=self.duty_range(duty1,duty2,duty3,duty4)
-        self.left_Upper_Wheel(duty1)
-        self.left_Lower_Wheel(duty2)
-        self.right_Upper_Wheel(duty3)
-        self.right_Lower_Wheel(duty4)
 
-    def move_forward(self, speed=50):
-        print("Moving forward...")
-        self.setMotorModel(2000, 2000, 2000, 2000)
+    def duty_range(self, duty):
+        return max(min(duty, 4095), -4095)
 
-    def move_backwards(self, speed=50):
-        print("Moving backward...")
-        self.setMotorModel(-2000,-2000,-2000,-2000)
+    def set_motor_model(self, duty1, duty2, duty3, duty4):
+        # Clamp all duty values
+        duty1 = self.duty_range(duty1)
+        duty2 = self.duty_range(duty2)
+        duty3 = self.duty_range(duty3)
+        duty4 = self.duty_range(duty4)
 
-    def turn_left(self, speed=25):
-        print("Turning left...")
-        self.setMotorModel(-500,-500,2000,2000) 
+        # Motor 1 (Left Front)
+        self._drive_motor(0, 1, duty1)
+        # Motor 2 (Left Rear)
+        self._drive_motor(2, 3, duty2)
+        # Motor 3 (Right Rear)
+        self._drive_motor(4, 5, duty4)
+        # Motor 4 (Right Front)
+        self._drive_motor(6, 7, duty3)
 
-    def turn_right(self, speed=25):
-        print("Turning right...")
-        self.setMotorModel(1000,2000,-500,-500)
+    def _drive_motor(self, pinA, pinB, duty):
+        if duty > 0:
+            self.pwm.set_motor_pwm(pinA, 0)
+            self.pwm.set_motor_pwm(pinB, duty)
+        elif duty < 0:
+            self.pwm.set_motor_pwm(pinB, 0)
+            self.pwm.set_motor_pwm(pinA, -duty)
+        else:
+            self.pwm.set_motor_pwm(pinA, 4095)
+            self.pwm.set_motor_pwm(pinB, 4095)
+
+    def move_forward(self, speed=600):
+        print("[MOTOR] Moving forward")
+        self.set_motor_model(speed, speed, speed, speed)
+
+    def move_backwards(self, speed=600):
+        print("[MOTOR] Moving backward")
+        self.set_motor_model(-speed, -speed, -speed, -speed)
+
+    def turn_left(self, speed=600):
+        print("[MOTOR] Turning left")
+        self.set_motor_model(-speed, -speed, speed, speed)
+
+    def turn_right(self, speed=600):
+        print("[MOTOR] Turning right")
+        self.set_motor_model(speed, speed, -speed, -speed)
 
     def stop_car(self):
-        print("Stopping car.")
-        self.setMotorModel(0,0,0,0)
-
-    def set_servo_angle(self, channel: str, angle: int, error: int = 10):
-        self.servo.set_servo_angle(channel, angle, error)
-
-    def cleanup(self):
-        print("Motor cleanup ...")
-        self.stop_car()
+        print("[MOTOR] Stopping car")
+        self.set_motor_model(0, 0, 0, 0)
